@@ -1,0 +1,36 @@
+version: '2'
+
+volumes:
+  nextcloud:
+
+services:
+
+  redis:
+    container_name: nextcloud-redis
+    image: redis:alpine
+    restart: always
+    tmpfs:
+      - /data:size=256M
+
+  app:
+    image: nextcloud:26.0.10-fpm
+    restart: always
+    depends_on:
+      - redis
+    volumes:
+      - nextcloud:/var/www/html
+    env_file:
+      - ./.env
+
+  web:
+    image: nginx
+    restart: always
+    ports:
+      - 8080:80
+      - 8443:443
+    links:
+      - app
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    volumes_from:
+      - app
